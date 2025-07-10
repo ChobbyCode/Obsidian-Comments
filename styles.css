@@ -1,8 +1,7 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+.comment-item {
+    background-color: color-mix(in srgb, var(--text-accent) 20%, white 95%);
+    min-height: 5rem;
+    border-radius: 5%;
+    padding: 0.5rem;
+    margin-bottom: 2rem;
+}
