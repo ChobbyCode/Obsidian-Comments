@@ -1,5 +1,6 @@
 .comment-item {
-    background-color: color-mix(in srgb, var(--text-accent) 20%, white 95%);
+    background-color: var(--background-primary);
+    color: var(--text-normal);
     min-height: 5rem;
     border-radius: 5%;
     padding: 0.5rem;

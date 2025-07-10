@@ -1,5 +1,6 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { MarkdownView, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
 import { ExampleView, VIEW_TYPE_EXAMPLE } from 'Views/CommentView/CommentView';
+import { ExampleModal } from 'Views/ModalPopup';
 
 export default class ExamplePlugin extends Plugin {
   async onload() {
@@ -14,6 +15,28 @@ export default class ExamplePlugin extends Plugin {
 
     this.app.workspace.on("active-leaf-change", () => {
       this.ReloadComments();
+    });
+
+    this.addCommand({
+      id: 'add-comment',
+      name: 'Add Comment',
+      callback: () => {
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const editor = view?.editor;
+        if (editor) {
+          new ExampleModal(
+            this.app,
+            editor.posToOffset(editor.getCursor('from')),
+            editor.posToOffset(editor.getCursor('to')),
+            this.app.workspace.getActiveFile()
+          ).open();
+        }
+
+        // if (editor) {
+        //   console.log(editor.posToOffset(editor.getCursor('from')))
+        //   console.log(editor.posToOffset(editor.getCursor('to')))
+        // }
+      },
     });
 
   }
