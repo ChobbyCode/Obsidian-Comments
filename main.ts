@@ -1,12 +1,12 @@
-import { MarkdownView, Notice, Plugin, WorkspaceLeaf } from 'obsidian';
-import { ExampleView, VIEW_TYPE_EXAMPLE } from 'Views/CommentView/CommentView';
-import { ExampleModal } from 'Views/ModalPopup';
+import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { CommentsView, VIEW_TYPE_EXAMPLE } from 'Views/CommentView/CommentView';
+import { CreateCommentModal } from 'Views/ModalPopup';
 
-export default class ExamplePlugin extends Plugin {
+export default class CommentsPlugin extends Plugin {
   async onload() {
     this.registerView(
       VIEW_TYPE_EXAMPLE,
-      (leaf) => new ExampleView(leaf)
+      (leaf) => new CommentsView(leaf)
     );
 
     this.addRibbonIcon('dice', 'Activate view', () => {
@@ -17,6 +17,11 @@ export default class ExamplePlugin extends Plugin {
       this.ReloadComments();
     });
 
+    this.app.workspace.on("file-open", (file) => {
+      console.log("file changed")
+      this.ReloadComments(file);
+    })
+
     this.addCommand({
       id: 'add-comment',
       name: 'Add Comment',
@@ -24,10 +29,11 @@ export default class ExamplePlugin extends Plugin {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
         const editor = view?.editor;
         if (editor) {
-          new ExampleModal(
+          new CreateCommentModal(
             this.app,
             editor.posToOffset(editor.getCursor('from')),
             editor.posToOffset(editor.getCursor('to')),
+            () => this.ReloadComments(),
             this.app.workspace.getActiveFile()
           ).open();
         }
@@ -41,11 +47,12 @@ export default class ExamplePlugin extends Plugin {
 
   }
 
-  private ReloadComments() {
+  private ReloadComments(sigmaFile?: TFile | null) {
     const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE)
     leaves.forEach(leaf => {
-      const view = leaf.view as ExampleView;
-      const file = this.app.workspace.getActiveFile();
+      const view = leaf.view as CommentsView;
+      let file = this.app.workspace.getActiveFile();
+      if(sigmaFile) file = sigmaFile; // I couldn't think of a better variable name that sigmaFile
       view.LoadComments(file);
     })
   }

@@ -1,9 +1,9 @@
 import { ItemView, TFile, WorkspaceLeaf, MarkdownView, Editor } from 'obsidian';
 import { CommentFile, CommentFiles } from './json/CustomCommentFile';
 
-export const VIEW_TYPE_EXAMPLE = 'example-view';
+export const VIEW_TYPE_EXAMPLE = 'comments-view';
 
-export class ExampleView extends ItemView {
+export class CommentsView extends ItemView {
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
   }
@@ -38,11 +38,13 @@ export class ExampleView extends ItemView {
       if (!commentFile) {
         console.log('No comment file found:', commentFilePath);
         // No comment file yet, maybe create or just return
+        this.DrawNoCommentsYet();
         return;
       }
 
       if (!commentFile || !(commentFile instanceof TFile)) {
         console.log('Comment file not found or is not a TFile:', commentFilePath);
+        this.DrawNoCommentsYet();
         return;
       }
 
@@ -51,7 +53,7 @@ export class ExampleView extends ItemView {
 
       // Parse JSON
       try {
-      let comments: CommentFiles = JSON.parse(content);
+        let comments: CommentFiles = JSON.parse(content);
       const editorContent = this.editor?.getValue() ?? '';
       const editorLength = editorContent.length;
       console.log("length ", editorLength)
@@ -83,6 +85,16 @@ export class ExampleView extends ItemView {
 
     // Append all comment elements at once
     container.appendChild(fragment);
+  }
+
+  private DrawNoCommentsYet(){
+    const container = this.containerEl.children[1];
+    container.empty();
+    
+    const commentElTop = document.createElement('div');
+    commentElTop.textContent = "No comments found.";
+    commentElTop.classList.add("empty-comment-item");
+    container.appendChild(commentElTop);
   }
 
   private editor: Editor | undefined;

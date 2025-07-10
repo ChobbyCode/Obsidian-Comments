@@ -1,12 +1,13 @@
 import { App, Modal, Setting, TFile } from 'obsidian';
 import { CommentFile, CommentFiles } from './CommentView/json/CustomCommentFile';
 
-export class ExampleModal extends Modal {
+export class CreateCommentModal extends Modal {
 
   constructor(
     app: App,
     startPos: number,
     endPos: number,
+    onSubmit: () => void,
     activeFile?: TFile | null
   ) {
     super(app);
@@ -88,8 +89,11 @@ export class ExampleModal extends Modal {
           .setCta()
           .onClick(() => {
             this.close();
-            this.CreateComment(comment, startP, endP, activeFile);
-          }));
+            this.CreateComment(comment, startP, endP, activeFile).then(() => {
+              onSubmit();
+            });
+          }
+        ));
   }
 
   private async CreateComment(text: string, startPos: number, endPos: number, activeFile?: TFile | null) {
@@ -117,16 +121,49 @@ export class ExampleModal extends Modal {
         const json = JSON.stringify(comments, null, 2);
         await this.app.vault.create(commentFilePath, json);
       } else {
-        console.log("file exists")
+        // Build the comment file path by prepending a dot and appending .comments.json
+        const commentFilePath = activeFile.path.replace(/([^/]+)$/, (match) => `${match}.comments.json`);
+
+        // Check if the comment file exists
+        const commentFile = this.app.vault.getAbstractFileByPath(commentFilePath);
+
+        if (!commentFile) {
+          console.log('No comment file found:', commentFilePath);
+          // No comment file yet, maybe create or just return
+          return;
+        }
+
+        if (!commentFile || !(commentFile instanceof TFile)) {
+          console.log('Comment file not found or is not a TFile:', commentFilePath);
+          return;
+        }
+
+        // Read the comment file content
+        const content = await this.app.vault.read(commentFile);
+
+        // Parse JSON
+        try {
+          let comments: CommentFiles = JSON.parse(content);
+          comments.comments.push({
+            comment: text,
+            startPos: startPos,
+            endPos: endPos
+          });
+
+          const json = JSON.stringify(comments, null, 2);
+          await this.app.vault.modify(commentFile, json);
+
+
+        } catch (e) {
+          console.error('Failed to parse comments JSON:', e);
+          return;
+        }
       }
 
       if (!commentFile || !(commentFile instanceof TFile)) {
         console.log('Comment file not found or is not a TFile:', commentFilePath);
         return;
       }
-
-      // Read the comment file content
-      const content = await this.app.vault.read(commentFile);
     }
   }
 }
