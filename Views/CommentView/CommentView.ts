@@ -1,5 +1,6 @@
-import { ItemView, TFile, WorkspaceLeaf, MarkdownView, Editor } from 'obsidian';
+import { ItemView, TFile, WorkspaceLeaf, MarkdownView, Editor, setIcon } from 'obsidian';
 import { CommentFile, CommentFiles } from './json/CustomCommentFile';
+import { CreateCommentModal } from 'Views/ModalPopup';
 
 export const VIEW_TYPE_EXAMPLE = 'comments-view';
 
@@ -54,20 +55,20 @@ export class CommentsView extends ItemView {
       // Parse JSON
       try {
         let comments: CommentFiles = JSON.parse(content);
-      const editorContent = this.editor?.getValue() ?? '';
-      const editorLength = editorContent.length;
-      console.log("length ", editorLength)
+        const editorContent = this.editor?.getValue() ?? '';
+        const editorLength = editorContent.length;
+        console.log("length ", editorLength)
 
-      // Filter comments based on the current editor content length
-      const filteredComments = {
-        comments: comments.comments.filter(c => c.startPos < editorLength && c.endPos <= editorLength)
-      };
+        // Filter comments based on the current editor content length
+        const filteredComments = {
+          comments: comments.comments.filter(c => c.startPos < editorLength && c.endPos <= editorLength)
+        };
 
-      this.Render(filteredComments);
-    } catch (e) {
-      console.error('Failed to parse comments JSON:', e);
-      return;
-    }
+        this.Render(filteredComments);
+      } catch (e) {
+        console.error('Failed to parse comments JSON:', e);
+        return;
+      }
     }
   }
 
@@ -87,10 +88,10 @@ export class CommentsView extends ItemView {
     container.appendChild(fragment);
   }
 
-  private DrawNoCommentsYet(){
+  private DrawNoCommentsYet() {
     const container = this.containerEl.children[1];
     container.empty();
-    
+
     const commentElTop = document.createElement('div');
     commentElTop.textContent = "No comments found.";
     commentElTop.classList.add("empty-comment-item");
@@ -111,6 +112,29 @@ export class CommentsView extends ItemView {
     const commentEl = document.createElement('div');
     commentEl.textContent = comment;
     commentEl.classList.add("comment-item");
+
+    const editBtn = document.createElement('button');
+    editBtn.classList.add('edit-comment-btn')
+
+    const iconEl = document.createElement('span');
+    iconEl.classList.add('mod-icon');
+    setIcon(iconEl, 'info')
+    editBtn.appendChild(iconEl);
+
+    // Opens The Modal To Edit The Comment
+    // This Will Probably Require An Id System To Be Implemented
+    editBtn.addEventListener('mousedown', () => {
+      new CreateCommentModal(
+        this.app,
+        startPos,
+        endPos,
+        () => this.LoadComments(),
+        this.app.workspace.getActiveFile(),
+        comment
+      ).open();
+    });
+
+    commentEl.appendChild(editBtn);
 
     // Focus Functionality Which Highlights Text When Hover Over Comment
     commentEl.addEventListener('mouseenter', () => {
@@ -139,6 +163,9 @@ export class CommentsView extends ItemView {
       }
     });
 
-    return  commentEl;
+
+
+
+    return commentEl;
   }
 }

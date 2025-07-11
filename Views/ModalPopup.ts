@@ -1,5 +1,6 @@
 import { App, Modal, Setting, TFile } from 'obsidian';
 import { CommentFile, CommentFiles } from './CommentView/json/CustomCommentFile';
+import { text } from 'stream/consumers';
 
 export class CreateCommentModal extends Modal {
 
@@ -8,7 +9,8 @@ export class CreateCommentModal extends Modal {
     startPos: number,
     endPos: number,
     onSubmit: () => void,
-    activeFile?: TFile | null
+    activeFile?: TFile | null,
+    existingComment?: string
   ) {
     super(app);
     this.setTitle('Commenting');
@@ -18,11 +20,13 @@ export class CreateCommentModal extends Modal {
     let endP = 0;
     startP = startPos;
     endP = endPos;
+    if(existingComment) comment = existingComment;
 
     new Setting(this.contentEl)
       .setName('Comment')
       .addTextArea((textArea) => {
         // Make the text area larger and more usable
+        textArea.inputEl.value = comment
         textArea.inputEl.rows = 5;
         textArea.inputEl.style.minWidth = '400px';
         textArea.inputEl.style.maxWidth = '400px';

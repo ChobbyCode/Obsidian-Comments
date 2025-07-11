@@ -19,3 +19,25 @@
     font-size: small;
     text-align: center;
 }
+
+.comment-item {
+  position: relative; /* Make sure it can contain absolutely positioned children */
+  padding-right: 30px; /* Add some right padding so text doesn't overlap button */
+}
+
+.edit-comment-btn {
+  position: absolute;
+  right: 5px;   /* Align near the far right edge */
+  top: 50%;
+  transform: translateY(-50%);
+  display: none; /* Hidden by default */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Show the button on hover of the comment item */
+.comment-item:hover .edit-comment-btn {
+  display: inline-block;
+}

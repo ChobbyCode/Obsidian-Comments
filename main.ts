@@ -1,11 +1,11 @@
 import { MarkdownView, Notice, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
-import { CommentsView, VIEW_TYPE_EXAMPLE } from 'Views/CommentView/CommentView';
+import { CommentsView, VIEW_TYPE_EXAMPLE as COMMENT_VIEW_TYPE } from 'Views/CommentView/CommentView';
 import { CreateCommentModal } from 'Views/ModalPopup';
 
 export default class CommentsPlugin extends Plugin {
   async onload() {
     this.registerView(
-      VIEW_TYPE_EXAMPLE,
+      COMMENT_VIEW_TYPE,
       (leaf) => new CommentsView(leaf)
     );
 
@@ -121,8 +121,9 @@ export default class CommentsPlugin extends Plugin {
     );
   }
 
+  // Gets all the leaves that exist of the view type we created
   private ReloadComments(sigmaFile?: TFile | null) {
-    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE)
+    const leaves = this.app.workspace.getLeavesOfType(COMMENT_VIEW_TYPE)
     leaves.forEach(leaf => {
       const view = leaf.view as CommentsView;
       let file = this.app.workspace.getActiveFile();
@@ -138,7 +139,7 @@ export default class CommentsPlugin extends Plugin {
     const { workspace } = this.app;
 
     let leaf: WorkspaceLeaf | null = null;
-    const leaves = workspace.getLeavesOfType(VIEW_TYPE_EXAMPLE);
+    const leaves = workspace.getLeavesOfType(COMMENT_VIEW_TYPE);
 
     if (leaves.length > 0) {
       // A leaf with our view already exists, use that
@@ -151,7 +152,7 @@ export default class CommentsPlugin extends Plugin {
         console.log("leaf was null");
         return;
       }
-      await leaf.setViewState({ type: VIEW_TYPE_EXAMPLE, active: true });
+      await leaf.setViewState({ type: COMMENT_VIEW_TYPE, active: true });
     }
 
     // "Reveal" the leaf in case it is in a collapsed sidebar
