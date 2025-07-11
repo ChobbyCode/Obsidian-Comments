@@ -87,10 +87,30 @@ export class CreateCommentModal extends Modal {
         });
       });
 
-    new Setting(this.contentEl)
+    const optionRow = new Setting(this.contentEl);
+
+    if (existingComment) {
+      optionRow
+        .addButton((btn) =>
+          btn
+            .setButtonText('Delete')
+            .setCta()
+            .setWarning()
+            .setClass('comment-delete-btn')
+            .onClick(() => {
+              this.close();
+              this.DeleteComment(uuid, activeFile).then(() => {
+                onSubmit();
+              })
+            }
+            )
+        )
+    }
+
+    optionRow
       .addButton((btn) =>
         btn
-          .setButtonText('Submit')
+          .setButtonText('Save')
           .setCta()
           .onClick(() => {
             this.close();
@@ -101,7 +121,9 @@ export class CreateCommentModal extends Modal {
               });
             } else {
               // If it's existing we can assume that a comment file already exists, and need to modify the existing comment instead
-              this.UpdateComment(comment, startP, endP, uuid, activeFile)
+              this.UpdateComment(comment, startP, endP, uuid, activeFile).then(() => {
+                onSubmit();
+              });
             }
           }
           ));
@@ -210,9 +232,9 @@ export class CreateCommentModal extends Modal {
         let updatedComments: CommentFile[] = [];
         comments.comments.forEach(commentFile => {
           console.log(commentFile.comment, " | uuid: ", commentFile.uuid, " match: ", uuid)
-          if(commentFile.uuid != uuid) updatedComments.push(commentFile);
+          if (commentFile.uuid != uuid) updatedComments.push(commentFile);
           else {
-            let changedComment : CommentFile = {
+            let changedComment: CommentFile = {
               comment: text,
               startPos: startPos,
               endPos: endPos,
@@ -222,7 +244,50 @@ export class CreateCommentModal extends Modal {
           }
         });
 
-        const json = JSON.stringify({comments: updatedComments}, null, 2);
+        const json = JSON.stringify({ comments: updatedComments }, null, 2);
+        await this.app.vault.modify(commentFile, json);
+
+      } catch (e) {
+        console.error('Failed to parse comments JSON:', e);
+        return;
+      }
+    }
+  }
+
+  private async DeleteComment(uuid?: string | null, activeFile?: TFile | null){
+    if (activeFile) {
+      // Build the comment file path by prepending a dot and appending .comments.json
+      const commentFilePath = activeFile.path.replace(/([^/]+)$/, (match) => `${match}.comments.json`);
+
+      // Check if the comment file exists
+      const commentFile = this.app.vault.getAbstractFileByPath(commentFilePath);
+
+      // We know comment file will be found because we're updating the file, this is for redundancy just in case and to stop vscode from erroring. 
+      if (!commentFile) {
+        console.log('No comment file found:', commentFilePath);
+        // No comment file yet, maybe create or just return
+        return;
+      }
+
+      if (!commentFile || !(commentFile instanceof TFile)) {
+        console.log('Comment file not found or is not a TFile:', commentFilePath);
+        return;
+      }
+
+      // Read the comment file content
+      const content = await this.app.vault.read(commentFile);
+      console.log(content);
+
+      // Parse JSON
+      try {
+        let comments: CommentFiles = JSON.parse(content);
+        let updatedComments: CommentFile[] = [];
+        comments.comments.forEach(commentFile => {
+          console.log(commentFile.comment, " | uuid: ", commentFile.uuid, " match: ", uuid)
+          if (commentFile.uuid != uuid) updatedComments.push(commentFile);
+        });
+
+        const json = JSON.stringify({ comments: updatedComments }, null, 2);
         await this.app.vault.modify(commentFile, json);
 
       } catch (e) {

@@ -79,6 +79,11 @@ export class CommentsView extends ItemView {
     // Create a DocumentFragment to hold all comment elements
     const fragment = document.createDocumentFragment();
 
+    if (comments.comments.length < 1) {
+      this.DrawNoCommentsYet();
+      return;
+    }
+
     for (const c of comments.comments) {
       const commentEl = this.GenerateCommentElement(c.comment, c.startPos, c.endPos, c.uuid);
       fragment.appendChild(commentEl);
@@ -128,7 +133,7 @@ export class CommentsView extends ItemView {
         this.app,
         startPos,
         endPos,
-        () => this.LoadComments(),
+        () => this.LoadComments(this.app.workspace.getActiveFile()),
         this.app.workspace.getActiveFile(),
         comment,
         uuid

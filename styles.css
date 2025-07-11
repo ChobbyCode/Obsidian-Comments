@@ -41,3 +41,7 @@
 .comment-item:hover .edit-comment-btn {
   display: inline-block;
 }
+
+.comment-delete-button {
+  color: var(--text-on-accent);
+}
