@@ -60,11 +60,11 @@ export class CommentsView extends ItemView {
         console.log("length ", editorLength)
 
         // Filter comments based on the current editor content length
-        const filteredComments = {
-          comments: comments.comments.filter(c => c.startPos < editorLength && c.endPos <= editorLength)
-        };
+        // const filteredComments = {
+        //   comments: comments.comments.filter(c => c.startPos < editorLength && c.endPos <= editorLength)
+        // };
 
-        this.Render(filteredComments);
+        this.Render(comments);
       } catch (e) {
         console.error('Failed to parse comments JSON:', e);
         return;
@@ -80,7 +80,7 @@ export class CommentsView extends ItemView {
     const fragment = document.createDocumentFragment();
 
     for (const c of comments.comments) {
-      const commentEl = this.GenerateCommentElement(c.comment, c.startPos, c.endPos);
+      const commentEl = this.GenerateCommentElement(c.comment, c.startPos, c.endPos, c.uuid);
       fragment.appendChild(commentEl);
     }
 
@@ -108,7 +108,7 @@ export class CommentsView extends ItemView {
     }
   }
 
-  private GenerateCommentElement(comment: string, startPos: number, endPos: number): HTMLElement {
+  private GenerateCommentElement(comment: string, startPos: number, endPos: number, uuid: string): HTMLElement {
     const commentEl = document.createElement('div');
     commentEl.textContent = comment;
     commentEl.classList.add("comment-item");
@@ -130,7 +130,8 @@ export class CommentsView extends ItemView {
         endPos,
         () => this.LoadComments(),
         this.app.workspace.getActiveFile(),
-        comment
+        comment,
+        uuid
       ).open();
     });
 
@@ -162,9 +163,6 @@ export class CommentsView extends ItemView {
         this.editor.setSelection(cursor, cursor);
       }
     });
-
-
-
 
     return commentEl;
   }

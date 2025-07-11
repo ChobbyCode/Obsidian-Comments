@@ -10,7 +10,8 @@ export class CreateCommentModal extends Modal {
     endPos: number,
     onSubmit: () => void,
     activeFile?: TFile | null,
-    existingComment?: string
+    existingComment?: string,
+    uuid?: string
   ) {
     super(app);
     this.setTitle('Commenting');
@@ -20,7 +21,7 @@ export class CreateCommentModal extends Modal {
     let endP = 0;
     startP = startPos;
     endP = endPos;
-    if(existingComment) comment = existingComment;
+    if (existingComment) comment = existingComment;
 
     new Setting(this.contentEl)
       .setName('Comment')
@@ -93,11 +94,17 @@ export class CreateCommentModal extends Modal {
           .setCta()
           .onClick(() => {
             this.close();
-            this.CreateComment(comment, startP, endP, activeFile).then(() => {
-              onSubmit();
-            });
+            // If the comment is not existing then we will add the comment to the comment file
+            if (!existingComment) {
+              this.CreateComment(comment, startP, endP, activeFile).then(() => {
+                onSubmit();
+              });
+            } else {
+              // If it's existing we can assume that a comment file already exists, and need to modify the existing comment instead
+              this.UpdateComment(comment, startP, endP, uuid, activeFile)
+            }
           }
-        ));
+          ));
   }
 
   private async CreateComment(text: string, startPos: number, endPos: number, activeFile?: TFile | null) {
@@ -117,7 +124,8 @@ export class CreateCommentModal extends Modal {
         comments.comments.push({
           comment: text,
           startPos: startPos,
-          endPos: endPos
+          endPos: endPos,
+          uuid: crypto.randomUUID()
         });
 
         console.log('No comment file found:', commentFilePath);
@@ -151,7 +159,8 @@ export class CreateCommentModal extends Modal {
           comments.comments.push({
             comment: text,
             startPos: startPos,
-            endPos: endPos
+            endPos: endPos,
+            uuid: crypto.randomUUID()
           });
 
           const json = JSON.stringify(comments, null, 2);
@@ -166,6 +175,58 @@ export class CreateCommentModal extends Modal {
 
       if (!commentFile || !(commentFile instanceof TFile)) {
         console.log('Comment file not found or is not a TFile:', commentFilePath);
+        return;
+      }
+    }
+  }
+
+  private async UpdateComment(text: string, startPos: number, endPos: number, uuid?: string | null, activeFile?: TFile | null) {
+    if (activeFile) {
+      // Build the comment file path by prepending a dot and appending .comments.json
+      const commentFilePath = activeFile.path.replace(/([^/]+)$/, (match) => `${match}.comments.json`);
+
+      // Check if the comment file exists
+      const commentFile = this.app.vault.getAbstractFileByPath(commentFilePath);
+
+      // We know comment file will be found because we're updating the file, this is for redundancy just in case and to stop vscode from erroring. 
+      if (!commentFile) {
+        console.log('No comment file found:', commentFilePath);
+        // No comment file yet, maybe create or just return
+        return;
+      }
+
+      if (!commentFile || !(commentFile instanceof TFile)) {
+        console.log('Comment file not found or is not a TFile:', commentFilePath);
+        return;
+      }
+
+      // Read the comment file content
+      const content = await this.app.vault.read(commentFile);
+      console.log(content);
+
+      // Parse JSON
+      try {
+        let comments: CommentFiles = JSON.parse(content);
+        let updatedComments: CommentFile[] = [];
+        comments.comments.forEach(commentFile => {
+          console.log(commentFile.comment, " | uuid: ", commentFile.uuid, " match: ", uuid)
+          if(commentFile.uuid != uuid) updatedComments.push(commentFile);
+          else {
+            let changedComment : CommentFile = {
+              comment: text,
+              startPos: startPos,
+              endPos: endPos,
+              uuid: uuid
+            }
+            updatedComments.push(changedComment);
+          }
+        });
+
+        const json = JSON.stringify({comments: updatedComments}, null, 2);
+        await this.app.vault.modify(commentFile, json);
+
+      } catch (e) {
+        console.error('Failed to parse comments JSON:', e);
         return;
       }
     }
