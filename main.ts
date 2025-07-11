@@ -45,6 +45,8 @@ export default class CommentsPlugin extends Plugin {
       },
     });
 
+
+    // Adds 'Add Comment' Option To Right Click Selection Menu
     this.registerEvent(
       this.app.workspace.on('editor-menu', (menu, editor, view) => {
         const selection = editor.getSelection();
@@ -68,6 +70,8 @@ export default class CommentsPlugin extends Plugin {
       })
     );
 
+    
+    // Delete Comment File If Markdown File Is Deleted
     this.registerEvent(
       this.app.vault.on('delete', async (file) => {
         if (!(file instanceof TFile)) return;
@@ -90,6 +94,31 @@ export default class CommentsPlugin extends Plugin {
       })
     );
 
+
+    // Rename Comment File If Markdown File Is Renamed
+    this.registerEvent(
+      this.app.vault.on('rename', async (file, oldPath) => {
+        if (!(file instanceof TFile)) return;
+
+        // Only process markdown files
+        if (file.extension !== 'md') return;
+
+        // Construct the old comment file path
+        const oldCommentFilePath = oldPath.replace(/([^/]+)$/, (match) => `${match}.comments.json`);
+        const newCommentFilePath = file.path.replace(/([^/]+)$/, (match) => `${match}.comments.json`);
+
+        const oldCommentFile = this.app.vault.getAbstractFileByPath(oldCommentFilePath);
+
+        if (oldCommentFile && oldCommentFile instanceof TFile) {
+          try {
+            await this.app.fileManager.renameFile(oldCommentFile, newCommentFilePath);
+            console.log(`Renamed comment file from ${oldCommentFilePath} to ${newCommentFilePath}`);
+          } catch (err) {
+            console.error('Failed to rename associated comment file:', err);
+          }
+        }
+      })
+    );
   }
 
   private ReloadComments(sigmaFile?: TFile | null) {
