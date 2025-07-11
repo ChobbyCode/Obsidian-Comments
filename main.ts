@@ -45,6 +45,51 @@ export default class CommentsPlugin extends Plugin {
       },
     });
 
+    this.registerEvent(
+      this.app.workspace.on('editor-menu', (menu, editor, view) => {
+        const selection = editor.getSelection();
+
+        if (selection && selection.length > 0) {
+          menu.addItem((item) =>
+            item
+              .setTitle('Add Comment')
+              .setIcon('message-square') // Optional: any Obsidian icon
+              .onClick(() => {
+                new CreateCommentModal(
+                  this.app,
+                  editor.posToOffset(editor.getCursor('from')),
+                  editor.posToOffset(editor.getCursor('to')),
+                  () => this.ReloadComments(),
+                  this.app.workspace.getActiveFile()
+                ).open();
+              })
+          );
+        }
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on('delete', async (file) => {
+        if (!(file instanceof TFile)) return;
+
+        // Check if it's a markdown file
+        if (file.extension !== 'md') return;
+
+        // Build path to .comments.json file
+        const commentFilePath = file.path.replace(/([^/]+)$/, (match) => `${match}.comments.json`);
+        const commentFile = this.app.vault.getAbstractFileByPath(commentFilePath);
+
+        if (commentFile && commentFile instanceof TFile) {
+          try {
+            await this.app.vault.delete(commentFile);
+            console.log(`Deleted comment file for: ${file.path}`);
+          } catch (err) {
+            console.error('Failed to delete associated comment file:', err);
+          }
+        }
+      })
+    );
+
   }
 
   private ReloadComments(sigmaFile?: TFile | null) {
@@ -52,7 +97,7 @@ export default class CommentsPlugin extends Plugin {
     leaves.forEach(leaf => {
       const view = leaf.view as CommentsView;
       let file = this.app.workspace.getActiveFile();
-      if(sigmaFile) file = sigmaFile; // I couldn't think of a better variable name that sigmaFile
+      if (sigmaFile) file = sigmaFile; // I couldn't think of a better variable name that sigmaFile
       view.LoadComments(file);
     })
   }
