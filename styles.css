@@ -1,36 +1,46 @@
 .comment-item {
-    background-color: var(--background-primary);
-    color: var(--text-normal);
-    min-height: 80px;
-    border-radius: 5%;
-    padding: 8px;
-    margin-bottom: 32px;
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+  min-height: 80px;
+  border-radius: 2px;
+  padding: 8px;
+  margin-bottom: 32px;
+
+  font-size: var(--font-ui-small);
+
+  /* Styles To Try Fit With Other Obsidian Elements — Text Only */
+  margin-inline-start: 0px !important;
+  padding-inline-start: 24px !important;
 }
 
 .empty-comment-item {
-    color: var(--text-muted);
-    font-size: small;
-    text-align: center;
-    margin-top: 32px;
+  color: var(--text-muted);
+  font-size: small;
+  text-align: center;
+  margin-top: 32px;
 }
 
 .empty-comment-item-bottom {
-    color: var(--text-muted);
-    font-size: small;
-    text-align: center;
+  color: var(--text-muted);
+  font-size: small;
+  text-align: center;
 }
 
 .comment-item {
-  position: relative; /* Make sure it can contain absolutely positioned children */
-  padding-right: 30px; /* Add some right padding so text doesn't overlap button */
+  position: relative;
+  /* Make sure it can contain absolutely positioned children */
+  padding-right: 30px;
+  /* Add some right padding so text doesn't overlap button */
 }
 
 .edit-comment-btn {
   position: absolute;
-  right: 5px;   /* Align near the far right edge */
+  right: 5px;
+  /* Align near the far right edge */
   top: 50%;
   transform: translateY(-50%);
-  display: none; /* Hidden by default */
+  display: none;
+  /* Hidden by default */
   background: none;
   border: none;
   cursor: pointer;
